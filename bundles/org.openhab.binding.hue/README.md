@@ -112,6 +112,9 @@ Bridge hue:bridge:1 [ ipAddress="192.168.0.64", userName="qwertzuiopasdfghjklyxc
 | pollingInterval          | Seconds between fetching light values from the Hue Bridge. Optional, the default value is 10 (min="1", step="1").                                                                                                                                                                                                             |
 | sensorPollingInterval    | Milliseconds between fetching sensor-values from the Hue Bridge. A higher value means more delay for the sensor values, but a too low value can cause congestion on the bridge. Optional, the default value is 500. Default value will be considered if the value is lower than 50. Use 0 to disable the polling for sensors. |
 
+### Manual user creation
+In case you need to create a new user, follow [this guide](https://developers.meethue.com/develop/get-started-2/).
+
 ### Devices
 
 The devices are identified by the number that the Hue Bridge assigns to them (also shown in the Hue App as an identifier).
