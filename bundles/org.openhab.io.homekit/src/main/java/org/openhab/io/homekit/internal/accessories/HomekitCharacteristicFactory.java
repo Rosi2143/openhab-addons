@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -68,6 +68,12 @@ import io.github.hapjava.characteristics.Characteristic;
 import io.github.hapjava.characteristics.CharacteristicEnum;
 import io.github.hapjava.characteristics.ExceptionalConsumer;
 import io.github.hapjava.characteristics.HomekitCharacteristicChangeCallback;
+import io.github.hapjava.characteristics.impl.accessoryinformation.FirmwareRevisionCharacteristic;
+import io.github.hapjava.characteristics.impl.accessoryinformation.HardwareRevisionCharacteristic;
+import io.github.hapjava.characteristics.impl.accessoryinformation.IdentifyCharacteristic;
+import io.github.hapjava.characteristics.impl.accessoryinformation.ManufacturerCharacteristic;
+import io.github.hapjava.characteristics.impl.accessoryinformation.ModelCharacteristic;
+import io.github.hapjava.characteristics.impl.accessoryinformation.SerialNumberCharacteristic;
 import io.github.hapjava.characteristics.impl.airquality.NitrogenDioxideDensityCharacteristic;
 import io.github.hapjava.characteristics.impl.airquality.OzoneDensityCharacteristic;
 import io.github.hapjava.characteristics.impl.airquality.PM10DensityCharacteristic;
@@ -162,9 +168,14 @@ public class HomekitCharacteristicFactory {
     private static final Logger LOGGER = LoggerFactory.getLogger(HomekitCharacteristicFactory.class);
 
     // List of optional characteristics and corresponding method to create them.
-    private static final Map<HomekitCharacteristicType, BiFunction<HomekitTaggedItem, HomekitAccessoryUpdater, Characteristic>> OPTIONAL = new HashMap<HomekitCharacteristicType, BiFunction<HomekitTaggedItem, HomekitAccessoryUpdater, Characteristic>>() {
+    private static final Map<HomekitCharacteristicType, BiFunction<HomekitTaggedItem, HomekitAccessoryUpdater, Characteristic>> OPTIONAL = new HashMap<>() {
         {
             put(NAME, HomekitCharacteristicFactory::createNameCharacteristic);
+            put(MODEL, HomekitCharacteristicFactory::createModelCharacteristic);
+            put(MANUFACTURER, HomekitCharacteristicFactory::createManufacturerCharacteristic);
+            put(SERIAL_NUMBER, HomekitCharacteristicFactory::createSerialNumberCharacteristic);
+            put(FIRMWARE_REVISION, HomekitCharacteristicFactory::createFirmwareRevisionCharacteristic);
+            put(HARDWARE_REVISION, HomekitCharacteristicFactory::createHardwareRevisionCharacteristic);
             put(BATTERY_LOW_STATUS, HomekitCharacteristicFactory::createStatusLowBatteryCharacteristic);
             put(FAULT_STATUS, HomekitCharacteristicFactory::createStatusFaultCharacteristic);
             put(TAMPERED_STATUS, HomekitCharacteristicFactory::createStatusTamperedCharacteristic);
@@ -227,6 +238,7 @@ public class HomekitCharacteristicFactory {
             put(CURRENT_MEDIA_STATE, HomekitCharacteristicFactory::createCurrentMediaStateCharacteristic);
             put(TARGET_MEDIA_STATE, HomekitCharacteristicFactory::createTargetMediaStateCharacteristic);
             put(MUTE, HomekitCharacteristicFactory::createMuteCharacteristic);
+            put(IDENTIFY, HomekitCharacteristicFactory::createIdentifyCharacteristic);
         }
     };
 
@@ -583,7 +595,7 @@ public class HomekitCharacteristicFactory {
         BigDecimal lowThreshold = taggedItem.getConfiguration(HomekitTaggedItem.BATTERY_LOW_THRESHOLD,
                 BigDecimal.valueOf(20));
         BooleanItemReader lowBatteryReader = new BooleanItemReader(taggedItem.getItem(),
-                taggedItem.isInverted() ? OnOffType.OFF : OnOffType.ON,
+                OnOffType.from(!taggedItem.isInverted()),
                 taggedItem.isInverted() ? OpenClosedType.CLOSED : OpenClosedType.OPEN, lowThreshold, true);
         return new StatusLowBatteryCharacteristic(
                 () -> CompletableFuture.completedFuture(
@@ -627,6 +639,46 @@ public class HomekitCharacteristicFactory {
     private static NameCharacteristic createNameCharacteristic(HomekitTaggedItem taggedItem,
             HomekitAccessoryUpdater updater) {
         return new NameCharacteristic(() -> {
+            final State state = taggedItem.getItem().getState();
+            return CompletableFuture.completedFuture(state instanceof UnDefType ? "" : state.toString());
+        });
+    }
+
+    private static ModelCharacteristic createModelCharacteristic(HomekitTaggedItem taggedItem,
+            HomekitAccessoryUpdater updater) {
+        return new ModelCharacteristic(() -> {
+            final State state = taggedItem.getItem().getState();
+            return CompletableFuture.completedFuture(state instanceof UnDefType ? "" : state.toString());
+        });
+    }
+
+    private static ManufacturerCharacteristic createManufacturerCharacteristic(HomekitTaggedItem taggedItem,
+            HomekitAccessoryUpdater updater) {
+        return new ManufacturerCharacteristic(() -> {
+            final State state = taggedItem.getItem().getState();
+            return CompletableFuture.completedFuture(state instanceof UnDefType ? "" : state.toString());
+        });
+    }
+
+    private static SerialNumberCharacteristic createSerialNumberCharacteristic(HomekitTaggedItem taggedItem,
+            HomekitAccessoryUpdater updater) {
+        return new SerialNumberCharacteristic(() -> {
+            final State state = taggedItem.getItem().getState();
+            return CompletableFuture.completedFuture(state instanceof UnDefType ? "" : state.toString());
+        });
+    }
+
+    private static FirmwareRevisionCharacteristic createFirmwareRevisionCharacteristic(HomekitTaggedItem taggedItem,
+            HomekitAccessoryUpdater updater) {
+        return new FirmwareRevisionCharacteristic(() -> {
+            final State state = taggedItem.getItem().getState();
+            return CompletableFuture.completedFuture(state instanceof UnDefType ? "" : state.toString());
+        });
+    }
+
+    private static HardwareRevisionCharacteristic createHardwareRevisionCharacteristic(HomekitTaggedItem taggedItem,
+            HomekitAccessoryUpdater updater) {
+        return new HardwareRevisionCharacteristic(() -> {
             final State state = taggedItem.getItem().getState();
             return CompletableFuture.completedFuture(state instanceof UnDefType ? "" : state.toString());
         });
@@ -1054,7 +1106,7 @@ public class HomekitCharacteristicFactory {
     private static ResetFilterIndicationCharacteristic createFilterResetCharacteristic(HomekitTaggedItem taggedItem,
             HomekitAccessoryUpdater updater) {
         return new ResetFilterIndicationCharacteristic(
-                (value) -> ((SwitchItem) taggedItem.getItem()).send(OnOffType.ON));
+                (value) -> ((SwitchItem) taggedItem.getBaseItem()).send(OnOffType.ON));
     }
 
     private static ActiveCharacteristic createActiveCharacteristic(HomekitTaggedItem taggedItem,
@@ -1210,10 +1262,15 @@ public class HomekitCharacteristicFactory {
     private static MuteCharacteristic createMuteCharacteristic(HomekitTaggedItem taggedItem,
             HomekitAccessoryUpdater updater) {
         BooleanItemReader muteReader = new BooleanItemReader(taggedItem.getItem(),
-                taggedItem.isInverted() ? OnOffType.OFF : OnOffType.ON,
+                OnOffType.from(!taggedItem.isInverted()),
                 taggedItem.isInverted() ? OpenClosedType.CLOSED : OpenClosedType.OPEN);
         return new MuteCharacteristic(() -> CompletableFuture.completedFuture(muteReader.getValue()),
-                (value) -> taggedItem.send(value ? OnOffType.ON : OnOffType.OFF),
-                getSubscriber(taggedItem, MUTE, updater), getUnsubscriber(taggedItem, MUTE, updater));
+                (value) -> taggedItem.send(OnOffType.from(value)), getSubscriber(taggedItem, MUTE, updater),
+                getUnsubscriber(taggedItem, MUTE, updater));
+    }
+
+    private static IdentifyCharacteristic createIdentifyCharacteristic(HomekitTaggedItem taggedItem,
+            HomekitAccessoryUpdater updater) {
+        return new IdentifyCharacteristic((value) -> ((SwitchItem) taggedItem.getBaseItem()).send(OnOffType.ON));
     }
 }

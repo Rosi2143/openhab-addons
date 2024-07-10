@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -21,11 +21,10 @@ import org.eclipse.jdt.annotation.NonNullByDefault;
  */
 @NonNullByDefault
 public class AwattarBestpriceConfiguration {
-
-    public int rangeStart;
-    public int rangeDuration;
-    public int length;
-    public boolean consecutive;
+    public int rangeStart = 0;
+    public int rangeDuration = 24;
+    public int length = 1;
+    public boolean consecutive = true;
 
     @Override
     public String toString() {

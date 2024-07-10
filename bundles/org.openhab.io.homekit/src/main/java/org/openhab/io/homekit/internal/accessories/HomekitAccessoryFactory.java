@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -52,7 +52,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.github.hapjava.characteristics.Characteristic;
-import io.github.hapjava.characteristics.impl.common.NameCharacteristic;
 
 /**
  * Creates a HomekitAccessory for a given HomekitTaggedItem.
@@ -66,7 +65,7 @@ public class HomekitAccessoryFactory {
     public static final String METADATA_KEY = "homekit"; // prefix for HomeKit meta information in items.xml
 
     /** List of mandatory attributes for each accessory type. **/
-    private static final Map<HomekitAccessoryType, HomekitCharacteristicType[]> MANDATORY_CHARACTERISTICS = new HashMap<HomekitAccessoryType, HomekitCharacteristicType[]>() {
+    private static final Map<HomekitAccessoryType, HomekitCharacteristicType[]> MANDATORY_CHARACTERISTICS = new HashMap<>() {
         {
             put(ACCESSORY_GROUP, new HomekitCharacteristicType[] {});
             put(LEAK_SENSOR, new HomekitCharacteristicType[] { LEAK_DETECTED_STATE });
@@ -113,7 +112,7 @@ public class HomekitAccessoryFactory {
     };
 
     /** List of service implementation for each accessory type. **/
-    private static final Map<HomekitAccessoryType, Class<? extends AbstractHomekitAccessoryImpl>> SERVICE_IMPL_MAP = new HashMap<HomekitAccessoryType, Class<? extends AbstractHomekitAccessoryImpl>>() {
+    private static final Map<HomekitAccessoryType, Class<? extends AbstractHomekitAccessoryImpl>> SERVICE_IMPL_MAP = new HashMap<>() {
         {
             put(ACCESSORY_GROUP, HomekitAccessoryGroupImpl.class);
             put(LEAK_SENSOR, HomekitLeakSensorImpl.class);
@@ -211,13 +210,14 @@ public class HomekitAccessoryFactory {
                             taggedItem.getName());
                     throw new HomekitException("Circular accessory references");
                 }
-                ancestorServices.add(taggedItem);
                 accessoryImpl = accessoryImplClass.getConstructor(HomekitTaggedItem.class, List.class,
                         HomekitAccessoryUpdater.class, HomekitSettings.class)
                         .newInstance(taggedItem, foundCharacteristics, updater, settings);
                 addOptionalCharacteristics(taggedItem, accessoryImpl, metadataRegistry);
                 addOptionalMetadataCharacteristics(taggedItem, accessoryImpl);
+                accessoryImpl.setIsLinkedService(!ancestorServices.isEmpty());
                 accessoryImpl.init();
+                ancestorServices.add(taggedItem);
                 addLinkedServices(taggedItem, accessoryImpl, metadataRegistry, updater, settings, ancestorServices);
                 return accessoryImpl;
             } else {
@@ -467,15 +467,7 @@ public class HomekitAccessoryFactory {
             final var itemProxy = new HomekitOHItemProxy(groupMember);
             final var subTaggedItem = new HomekitTaggedItem(itemProxy, accessoryType, itemConfiguration);
             final var subAccessory = create(subTaggedItem, metadataRegistry, updater, settings, ancestorServices);
-
-            try {
-                subAccessory.addCharacteristic(new NameCharacteristic(() -> subAccessory.getName()));
-            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-                // This should never happen; all services should support NameCharacteristic as an optional
-                // Characteristic.
-                // If HAP-Java defined a service that doesn't support addOptionalCharacteristic(NameCharacteristic),
-                // Then it's a bug there, and we're just going to ignore the exception here.
-            }
+            subAccessory.promoteNameCharacteristic();
 
             if (subAccessory.isLinkable(accessory)) {
                 accessory.getPrimaryService().addLinkedService(subAccessory.getPrimaryService());

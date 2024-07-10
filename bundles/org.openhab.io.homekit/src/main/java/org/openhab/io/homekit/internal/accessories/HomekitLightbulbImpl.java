@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -21,6 +21,7 @@ import org.openhab.core.library.types.OnOffType;
 import org.openhab.io.homekit.internal.HomekitAccessoryUpdater;
 import org.openhab.io.homekit.internal.HomekitCharacteristicType;
 import org.openhab.io.homekit.internal.HomekitCommandType;
+import org.openhab.io.homekit.internal.HomekitException;
 import org.openhab.io.homekit.internal.HomekitSettings;
 import org.openhab.io.homekit.internal.HomekitTaggedItem;
 
@@ -38,7 +39,12 @@ class HomekitLightbulbImpl extends AbstractHomekitAccessoryImpl implements Light
     public HomekitLightbulbImpl(HomekitTaggedItem taggedItem, List<HomekitTaggedItem> mandatoryCharacteristics,
             HomekitAccessoryUpdater updater, HomekitSettings settings) {
         super(taggedItem, mandatoryCharacteristics, updater, settings);
-        this.getServices().add(new LightbulbService(this));
+    }
+
+    @Override
+    public void init() throws HomekitException {
+        super.init();
+        getServices().add(new LightbulbService(this));
     }
 
     @Override

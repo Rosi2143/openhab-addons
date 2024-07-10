@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -26,7 +26,6 @@ import io.github.hapjava.characteristics.impl.common.ConfiguredNameCharacteristi
 import io.github.hapjava.characteristics.impl.common.IdentifierCharacteristic;
 import io.github.hapjava.characteristics.impl.common.IsConfiguredCharacteristic;
 import io.github.hapjava.characteristics.impl.common.IsConfiguredEnum;
-import io.github.hapjava.characteristics.impl.common.NameCharacteristic;
 import io.github.hapjava.characteristics.impl.inputsource.CurrentVisibilityStateCharacteristic;
 import io.github.hapjava.characteristics.impl.inputsource.CurrentVisibilityStateEnum;
 import io.github.hapjava.characteristics.impl.inputsource.InputDeviceTypeCharacteristic;
@@ -85,7 +84,6 @@ public class HomekitInputSourceImpl extends AbstractHomekitAccessoryImpl {
         var service = new InputSourceService(configuredNameCharacteristic, inputSourceTypeCharacteristic,
                 isConfiguredCharacteristic, currentVisibilityStateCharacteristic);
 
-        getCharacteristic(NameCharacteristic.class).ifPresent(c -> service.addOptionalCharacteristic(c));
         service.addOptionalCharacteristic(identifierCharacteristic);
         getCharacteristic(InputDeviceTypeCharacteristic.class).ifPresent(c -> service.addOptionalCharacteristic(c));
         getCharacteristic(TargetVisibilityStateCharacteristic.class)

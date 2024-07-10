@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2010-2023 Contributors to the openHAB project
+ * Copyright (c) 2010-2024 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -27,7 +27,15 @@ public enum HomekitCharacteristicType {
      * It is illegal to have a characteristic type also be a device type
      */
     EMPTY("Empty"), // used in case only accessory type but no characteristic provided
+
     NAME("Name"),
+    MANUFACTURER("Manufacturer"),
+    MODEL("Model"),
+    SERIAL_NUMBER("SerialNumber"),
+    FIRMWARE_REVISION("FirmwareRevision"),
+    HARDWARE_REVISION("HardwareRevision"),
+    IDENTIFY("Identify"),
+
     BATTERY_LOW_STATUS("BatteryLowStatus"),
     ACTIVE_STATUS("ActiveStatus"),
     ISCONFIGURED("IsConfigured"),
