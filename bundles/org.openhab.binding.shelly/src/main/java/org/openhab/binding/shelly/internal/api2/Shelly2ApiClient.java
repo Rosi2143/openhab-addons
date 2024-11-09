@@ -12,12 +12,13 @@
  */
 package org.openhab.binding.shelly.internal.api2;
 
-import static org.openhab.binding.shelly.internal.ShellyBindingConstants.CHANNEL_INPUT;
+import static org.openhab.binding.shelly.internal.ShellyBindingConstants.*;
 import static org.openhab.binding.shelly.internal.api1.Shelly1ApiJsonDTO.*;
 import static org.openhab.binding.shelly.internal.api2.Shelly2ApiJsonDTO.*;
 import static org.openhab.binding.shelly.internal.util.ShellyUtils.*;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -60,6 +61,7 @@ import org.openhab.binding.shelly.internal.api2.Shelly2ApiJsonDTO.Shelly2DeviceS
 import org.openhab.binding.shelly.internal.api2.Shelly2ApiJsonDTO.Shelly2DeviceStatus.Shelly2DeviceStatusResult;
 import org.openhab.binding.shelly.internal.api2.Shelly2ApiJsonDTO.Shelly2DeviceStatus.Shelly2DeviceStatusResult.Shelly2CoverStatus;
 import org.openhab.binding.shelly.internal.api2.Shelly2ApiJsonDTO.Shelly2DeviceStatus.Shelly2DeviceStatusResult.Shelly2DeviceStatusEm;
+import org.openhab.binding.shelly.internal.api2.Shelly2ApiJsonDTO.Shelly2DeviceStatus.Shelly2DeviceStatusResult.Shelly2DeviceStatusEmData;
 import org.openhab.binding.shelly.internal.api2.Shelly2ApiJsonDTO.Shelly2DeviceStatus.Shelly2DeviceStatusResult.Shelly2DeviceStatusHumidity;
 import org.openhab.binding.shelly.internal.api2.Shelly2ApiJsonDTO.Shelly2DeviceStatus.Shelly2DeviceStatusResult.Shelly2DeviceStatusIlluminance;
 import org.openhab.binding.shelly.internal.api2.Shelly2ApiJsonDTO.Shelly2DeviceStatus.Shelly2DeviceStatusResult.Shelly2DeviceStatusPower;
@@ -189,7 +191,7 @@ public class Shelly2ApiClient extends ShellyHttpClient {
         updated |= updateRelayStatus(status, result.switch3, channelUpdate);
         updated |= updateRelayStatus(status, result.switch100, channelUpdate);
         updated |= updateRelayStatus(status, result.pm10, channelUpdate);
-        updated |= updateEmStatus(status, result.em0, channelUpdate);
+        updated |= updateEmStatus(status, result.em0, result.emdata0, channelUpdate);
         updated |= updateEmStatus(status, result.em10, channelUpdate);
         updated |= updateEmStatus(status, result.em11, channelUpdate);
         updated |= updateRollerStatus(status, result.cover0, channelUpdate);
@@ -296,9 +298,10 @@ public class Shelly2ApiClient extends ShellyHttpClient {
     }
 
     private int getRelayIdx(ShellyDeviceProfile profile, @Nullable Integer id) {
-        if (id != null && profile.settings.relays != null) {
+        List<ShellySettingsRelay> relays = profile.settings.relays;
+        if (id != null && relays != null) {
             int idx = 0;
-            for (ShellySettingsRelay relay : profile.settings.relays) {
+            for (ShellySettingsRelay relay : relays) {
                 if (relay.isValid && relay.id != null && relay.id.intValue() == id.intValue()) {
                     return idx;
                 }
@@ -352,8 +355,8 @@ public class Shelly2ApiClient extends ShellyHttpClient {
     }
 
     private boolean updateEmStatus(ShellySettingsStatus status, @Nullable Shelly2DeviceStatusEm em,
-            boolean channelUpdate) throws ShellyApiException {
-        if (em == null) {
+            @Nullable Shelly2DeviceStatusEmData emData, boolean channelUpdate) throws ShellyApiException {
+        if (em == null || emData == null) {
             return false;
         }
 
@@ -367,10 +370,17 @@ public class Shelly2ApiClient extends ShellyHttpClient {
             status.totalReturned = em.totalAprtPower;
         }
 
+        if (emData.totalKWH != null) {
+            status.totalKWH = emData.totalKWH;
+        }
+
         ShellySettingsMeter sm = new ShellySettingsMeter();
         ShellySettingsEMeter emeter = status.emeters.get(0);
         if (em.aActPower != null) {
             sm.power = emeter.power = em.aActPower;
+        }
+        if (emData.aTotal != null) {
+            emeter.total = emData.aTotal;
         }
         if (em.aAprtPower != null) {
             emeter.totalReturned = em.aAprtPower;
@@ -394,6 +404,9 @@ public class Shelly2ApiClient extends ShellyHttpClient {
             if (em.bActPower != null) {
                 sm.power = emeter.power = em.bActPower;
             }
+            if (emData.bTotal != null) {
+                emeter.total = emData.bTotal;
+            }
             if (em.bAprtPower != null) {
                 emeter.totalReturned = em.bAprtPower;
             }
@@ -416,6 +429,9 @@ public class Shelly2ApiClient extends ShellyHttpClient {
             sm.isValid = emeter.isValid = true;
             if (em.cActPower != null) {
                 sm.power = emeter.power = em.cActPower;
+            }
+            if (emData.cTotal != null) {
+                emeter.total = emData.cTotal;
             }
             if (em.cAprtPower != null) {
                 emeter.totalReturned = em.cAprtPower;
@@ -477,7 +493,7 @@ public class Shelly2ApiClient extends ShellyHttpClient {
     }
 
     private void fillRollerFavorites(ShellyDeviceProfile profile, Shelly2GetConfigResult dc) {
-        if (dc.sys.uiData.cover != null) {
+        if (dc.sys.uiData.cover != null && !dc.sys.uiData.cover.isEmpty()) {
             String[] favorites = dc.sys.uiData.cover.split(",");
             profile.settings.favorites = new ArrayList<>();
             for (int i = 0; i < favorites.length; i++) {
@@ -561,12 +577,13 @@ public class Shelly2ApiClient extends ShellyHttpClient {
             return;
         }
 
-        if (profile.settings.dimmers != null) {
-            ShellySettingsDimmer ds = profile.settings.dimmers.get(0);
+        List<ShellySettingsDimmer> dimmers = profile.settings.dimmers;
+        if (dimmers != null) {
+            ShellySettingsDimmer ds = dimmers.get(0);
             ds.autoOn = dc.light0.autoOnDelay;
             ds.autoOff = dc.light0.autoOffDelay;
             ds.name = dc.light0.name;
-            profile.settings.dimmers.set(0, ds);
+            dimmers.set(0, ds);
         }
     }
 
@@ -588,12 +605,12 @@ public class Shelly2ApiClient extends ShellyHttpClient {
         return channelUpdate ? ShellyComponents.updateDimmers(getThing(), status) : false;
     }
 
-    protected @Nullable Integer getDuration(@Nullable Double timerStartedAt, @Nullable Integer timerDuration) {
+    protected @Nullable Integer getDuration(@Nullable Double timerStartedAt, @Nullable Double timerDuration) {
         if (timerStartedAt == null || timerDuration == null) {
             return null;
         }
-        int duration = (int) (now() - timerStartedAt.longValue());
-        return duration <= timerDuration ? timerDuration - duration : 0;
+        double duration = now() - timerStartedAt;
+        return duration <= timerDuration ? (int) (timerDuration - duration) : 0;
     }
 
     // Addon
@@ -709,21 +726,22 @@ public class Shelly2ApiClient extends ShellyHttpClient {
         }
     }
 
-    protected @Nullable ArrayList<ShellySettingsInput> fillInputSettings(ShellyDeviceProfile profile,
+    protected @Nullable ArrayList<@Nullable ShellySettingsInput> fillInputSettings(ShellyDeviceProfile profile,
             Shelly2GetConfigResult dc) {
         if (dc.input0 == null) {
             return null; // device has no input
         }
 
-        ArrayList<ShellySettingsInput> inputs = new ArrayList<>();
+        ArrayList<@Nullable ShellySettingsInput> inputs = new ArrayList<>();
         addInputSettings(inputs, dc.input0);
         addInputSettings(inputs, dc.input1);
         addInputSettings(inputs, dc.input2);
         addInputSettings(inputs, dc.input3);
+
         return inputs;
     }
 
-    private void addInputSettings(ArrayList<ShellySettingsInput> inputs, @Nullable Shelly2DevConfigInput ic) {
+    private void addInputSettings(List<@Nullable ShellySettingsInput> inputs, @Nullable Shelly2DevConfigInput ic) {
         if (ic == null) {
             return;
         }
@@ -807,6 +825,7 @@ public class Shelly2ApiClient extends ShellyHttpClient {
     }
 
     protected ShellyDeviceProfile getProfile() throws ShellyApiException {
+        ShellyThingInterface thing = this.thing;
         if (thing != null) {
             return thing.getProfile();
         }

@@ -28,11 +28,14 @@ Also check out the [Shelly Manager](doc/ShellyManager.md), which
 The binding supports both hardware generations
 
 - Generation 1: The original Shelly devices like the Shelly 1, Shelly 2.5, Shelly Flood etc.
-- Generation 2: Plus / Pro series of devices
+- Generation 2+3: Plus / Pro series of devices
 - Shelly Plus Mini: Shelly Plus devices in compact format (Gen 2+3)
 - Shelly BLU: Bluetooth based series of devices
 
 The binding provides the same feature set across all devices as good as possible and depending on device specific features.
+
+`Note:` Using BLU devices or the Plus/Pro Range Extender mode require some additional configuration steps.
+See section [Discovery](#discovery) for details.
 
 ### Generation 1
 
@@ -79,16 +82,17 @@ The binding provides the same feature set across all devices as good as possible
 
 | thing-type           | Model                                                    | Vendor ID                    |
 | -------------------- | -------------------------------------------------------- | ---------------------------- |
-| shellyplus1          | Shelly Plus 1 with 1x relay                              | SNSW-001X16EU                |
-| shellyplus1pm        | Shelly Plus 1PM with 1x relay + power meter              | SNSW-001P16EU                |
+| shellyplus1          | Shelly Plus 1 with 1x relay                              | SNSW-001X16EU, S3SW-001X16EU |
+| shellyplus1pm        | Shelly Plus 1PM with 1x relay + power meter              | SNSW-001P16EU, S3SW-001P16EU |
 | shellyplus2pm-relay  | Shelly Plus 2PM with 2x relay + power meter, relay mode  | SNSW-002P16EU, SNSW-102P16EU |
 | shellyplus2pm-roller | Shelly Plus 2PM with 2x relay + power meter, roller mode | SNSW-002P16EU, SNSW-102P16EU |
 | shellyplusplug       | Shelly Plug-S                                            | SNPL-00112EU                 |
 | shellyplusplug       | Shelly Plug-IT                                           | SNPL-00110IT                 |
 | shellyplusplug       | Shelly Plug-UK                                           | SNPL-00112UK                 |
 | shellyplusplugus     | Shelly Plug-US                                           | SNPL-00116US                 |
-| shellyplusi4         | Shelly Plus i4 with 4x AC input                          | SNSN-0024X                   |
+| shellyplusi4         | Shelly Plus i4 with 4x AC input                          | SNSN-0024X, S3SN-0024X       |
 | shellyplusi4dc       | Shelly Plus i4 with 4x DC input                          | SNSN-0D24X                   |
+| shellyplus10v        | Shelly Plus Dimmer 0/10V (Gen 2) or 0/1/10V (Gen 3)      | SNDM-00100WW, S3DM-0010WW    |
 | shellyplusht         | Shelly Plus HT with temperature + humidity sensor        | SNSN-0013A                   |
 | shellyhtg3           | Shelly Plus HT Gen 3 with temperature + humidity sensor  | S3SN-0U12A                   |
 | shellyplussmoke      | Shelly Plus Smoke sensor                                 | SNSN-0031Z                   |
@@ -96,7 +100,7 @@ The binding provides the same feature set across all devices as good as possible
 | shellywalldisplay    | Shelly Plus Wall Display                                 | SAWD-0A1XX10EU1              |
 | shellyblugw          | SHelly BLU Gateway                                       | SNGW-BT01                    |
 
-### Generation 2 Plus Mini series (incl. Gen 3)
+### Shelly Plus Mini series (Generation 2+3)
 
  | thing-type           | Model                                                    | Vendor ID                      |
  | -------------------- | -------------------------------------------------------- | ------------------------------ |
@@ -104,7 +108,7 @@ The binding provides the same feature set across all devices as good as possible
  | shelly1pmmini        | Shelly Plus 1PM Mini with 1x relay + power meter         | SNSW-001P8EU, S3SW-001P8EU     |
  | shellypmmini         | Shelly Plus PM Mini with 1x power meter                  | SNPM-001PCEU16, S3PM-001PCEU16 |
 
-### Generation 2 Pro series
+### Shelly Pro Series (Generation 2+3)
 
 | thing-type          | Model                                                    | Vendor ID                                      |
 | ------------------- | -------------------------------------------------------- | ---------------------------------------------- |
@@ -159,12 +163,15 @@ In this case autoCoIoT should be disabled, CoIoT events will not work, because t
 
 ## Firmware
 
-The binding requires firmware version 1.8.2 or newer for generation 1  to enable all features, version 1.9.2+ is recommended. Generation 2 devices require 0.10.2 or newer, the Plus HT at least 0.11.0.
+`Generation 1`: The binding requires firmware version 1.9.2 or newer to enable all features.
+`Generation 2+3` Those Shelly devices require firmware version 1.0.0 or newer (1.10.0+ is recommended).
+`Shelly BLU deries`: Use the Shelly App to update to 1.0+ version of the firmware.
+
 Some of the features are enabled dynamically or are not available depending on device type and firmware release.
 The Web UI of the Shelly device displays the current firmware version under Settings:Firmware and shows an update option when a newer version is available.
 
 The current firmware version is reported in the Thing Properties.
-A dedicated channel (device#updateAvailable) indicates the availability of a newer firmware.
+A dedicated channel indicates the availability of a newer firmware (`device#updateAvailable`, not available for BLU devices).
 Use the device's Web UI or the Shelly App to perform the update.
 
 Check [Advanced Users](doc/AdvancedUsers.md) for information how to update your device.
@@ -183,7 +190,7 @@ They periodically announce their presence, which is used by the binding to find 
 Sometimes you need to run the manual discovery multiple times until you see all your devices.
 
 `Important for Generation 1 Devices`:
-It's recommended to enable CoIoT in the device settings for faster response times (event driven rather than polling).
+It's strongly recommended to enable CoIoT in the device settings for faster response times (event driven rather than polling).
 Open the device's Web UI, section "COIOT settings" and select "Enable COCIOT".
 It's recommended to switch the Shelly devices to CoAP peer mode if you have only your openHAB system controlling the device.
 This allows routing the CoIoT/CoAP messages across multiple IP subnets without special network setup required.
@@ -193,12 +200,12 @@ Keep Multicast mode if you have multiple hosts, which should receive the CoAP up
 ### Discovery of BLU Devices
 
 The BLU devices use Bluetooth Low Energy (BLE).
-The binding can't communicate directly with the device, but the Plus/Pro series with firmware 0.14.1 or newer could be used as a gateway.
-The binding automatically installs a script on the Shelly Device (oh-blu-scanner), which forwards the BLU events to the binding using the WebSocket channel.
+The binding can't communicate directly with the device, so a Shelly Plus/Pro device is required with enabled Bluetooth to use those devices as a hub.
+The binding automatically installs a script on the Shelly Device (oh-blu-scanner.js), which forwards the BLU events to the binding.
 
 Follow these steps to add the Shelly BLU Device to openHAB
 
-- Make sure a Shelly is near by the BLU device, enable Bluetooh on this device (**disabling** the 'Bluetooth Gateway' mode in the Shelly app/UI is recommended)
+- Make sure a Shelly is near by the BLU device, enable Bluetooh on this device (**disable the 'Bluetooth Gateway' mode** in the Shelly app/UI is recommended)
 - Add this thing to openHAB, make sure thing gets online
 - Enable "BLU Gateway Support" in the thing configuration of the Shelly device acting as gateway.
 - Now press the button on your BLU device, this wakes up the device and the script forwards this event to the binding
@@ -207,12 +214,18 @@ Follow these steps to add the Shelly BLU Device to openHAB
 - Click the device button again, the binding gets another event and creates the channels and thing changes status to ONLINE
 - Finally link the channels to the equipment in the model
 
-Note: During initialization the script 'oh-blu-scanner.js' gets installed and activated on the Shelly Gateway device.
+`Note`:
+
+- During initialization the script 'oh-blu-scanner.js' gets installed and activated on the Shelly Gateway device.
+- Shelly BLU Motion: It may take some time until channels like Lux show up.
+
+Try moving the device to force status updates.
 
 Every time an event is received sensors#lastUpdate and channels are updated with the reported values.
-device#wifiSignal indicates the Bluetooth signal strength and gets updated when the device sends an event.
+`device#wifiSignal` indicates the Bluetooth signal strength and gets updated when the device sends an event.
 
 The binding supports multiple Shelly Plus/Pro as gateway devices unless they are added as thing and are ONLINE.
+In this scenario the channel `device#gatewayDevice` will report the last hub device, which forwarded a status update.
 
 ### Password Protected Devices
 
@@ -226,13 +239,12 @@ In this case the credentials are persisted as part of the Thing configuration.
 
 ### Range Extender Mode
 
-The Plus/Pro devices support the so-called Range Extender Mode (not available for Gen1). 
+The Plus/Pro devices support the so-called Range Extender Mode (not available for Gen1).
 This allows connect Shellys, which are normally no reachable, because of a lack of WiFi signal.
 Once enabled the Shelly acts as a hub to the linked devices, like a WiFi repeater.
 The hub device enables the access point, which can be seen by the linked device.
 The binding could then get access to the secondary device using &lt;ub shelly ip&gt;:&lt;special port&gt;.
 A special port on the hub device will be created for every linked device so one hub device could supported multiple linked devices.
-
 
 The binding communicates with the Shelly hub device, which then forwards the request to the secondary device.
 Once the thing for the primary Shelly goes online the binding detects the enabled range extender mode and adds all connected secondary devices to the Inbox.
@@ -273,14 +285,19 @@ Values 1-4 are selecting the corresponding favorite id in the Shelly App, 0 mean
 
 The binding sets the following Thing status depending on the device status:
 
-| Status         | Description                                                                                                                                                                                                                                                                                                  |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| INITIALIZING   | This is the default status while initializing the Thing. Once the initialization is triggered the Thing switches to Status UNKNOWN.                                                                                                                                                                          |
-| UNKNOWN        | Indicates that the status is currently unknown, which must not show a problem. Usually the Thing stays in this status when the device is in sleep mode. Once the device is reachable and was initialized the Thing switches to status ONLINE.                                                                |
-| ONLINE         | ONLINE indicates that the device can be accessed and is responding properly. Battery powered devices also stay ONLINE when in sleep mode. The binding has an integrated watchdog timer supervising the device, see below. The Thing switches to status OFFLINE when some type of communication error occurs. |
-| OFFLINE        | Communication with the device failed. Check the Thing status in the UI and openHAB's log for an indication of the error. Try restarting OH or deleting and re-discovering the Thing. You could also post to the community thread if the problem persists.                                                    |
-| CONFIG PENDING | The thing has been initialized, but device initialization is in progress or pending (e.g. waiting for device wake-up)                                                                                                                                                                                        |
-| ERROR: COMM    | Communication with the device has reported an error, check detailed status.                                                                                                                                                                                                                                  |
+| Status                | Description                                                                                                                  |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| INITIALIZING          | This is the default status while initializing the Thing. Once the initialization is triggered the Thing switches to Status ONLINE.CONFIGURATION_PENDING. |
+| UNKNOWN               | Indicates that the status is currently unknown, which must not show a problem. Once the device is reachable and was initialized the Thing switches to status ONLINE. |
+| CONFIGURATION_PENDING | The Thing has been initialized, but device initialization is in progress or pending (e.g. waiting for device wake-up).       |
+| ONLINE                | ONLINE indicates that the device can be accessed and is responding properly. Once initialized battery powered devices also stay ONLINE when in sleep mode. The binding has an integrated watchdog timer supervising the device, see below. The Thing switches to status OFFLINE when some type of communication error occurs.        |
+| OFFLINE               | Communication with the device failed. Check the Thing status in the UI and openHAB's log for an indication of the error.     |
+| COMMUNICATION_ERROR   | Communication with the device has reported an error, check detailed status. If the problem persists make sure to have stable WiFi, set the correct password etc. Try restarting OH or deleting and re-discovering the Thing. |
+| FIRMWARE_UPDATING     | Device firmware is updating, just wait. The device should come back to ONLINE within 2 minutes.                              |
+| DUTY_CYCLE            | The device is re-initializing and reported a restart event, e.g. after a firmware update or manual reboot.                   |
+
+`Note:`
+For more details see  [Thing Concept](https://www.openhab.org/docs/concepts/things.html#status-details) in openHAB documentation.
 
 `Battery powered devices:`
 If the device is in sleep mode and can't be reached by the binding, the Thing will change into CONFIG_PENDING.
@@ -464,7 +481,7 @@ Refer to section [Full Example](#full-example) for examples how to catch alarm t
 
 ## Channels
 
-Depending on the device type and firmware release channels might be not available or stay with value NaN.  
+Depending on the device type and firmware release channels might be not available or stay with value NaN.
 
 ### Shelly 1 (thing-type: shelly1)
 
@@ -612,7 +629,6 @@ The Thing id is derived from the service name, so that's the reason why the Thin
 _Note:
 You should calibrate the device if you want to use "neutral current" measurements.
 Check the Shelly documentation for details._
-
 
 ### Shelly 2 - relay mode (thing-type: shelly2-relay)
 
@@ -1325,7 +1341,6 @@ Channels lastEvent and eventCount are only available if input type is set to mom
 |       | totalKWH     | Number   | yes       | Total energy consumption in kwh since the device powered up (resets on restart)   |
 |       | lastUpdate   | DateTime | yes       | Timestamp of the last measurement                                                 |
 
-
 ### Shelly Plus PM Mini (thing-type: shellypmmini)
 
 | Group | Channel      | Type     | read-only | Description                                                                       |
@@ -1334,7 +1349,6 @@ Channels lastEvent and eventCount are only available if input type is set to mom
 |       | lastPower1   | Number   | yes       | Energy consumption for a round minute, 1 minute  ago                              |
 |       | totalKWH     | Number   | yes       | Total energy consumption in kwh since the device powered up (resets on restart)   |
 |       | lastUpdate   | DateTime | yes       | Timestamp of the last measurement                                                 |
-
 
 ## Shelly Pro Series
 
@@ -1588,7 +1602,6 @@ There are no additional channels beside the device group.
 Thing shelly:shelly25-roller:XXXXX1 "Shelly 25 Roller XXXXX1" @ "Home Theater" [deviceIp="x.x.x.x", userId="", password=""]
 Thing shelly:shelly25-roller:XXXXX2 "Shelly 25 Roller XXXXX2" @ "Living Room"  [deviceIp="x.x.x.x", userId="admin", password="secret"]
 
-
 /* Shelly 2.5 Relays */
 Thing shelly:shelly25-relay:XXXXX3 "Shelly 25 Relay XXXXX3" @ "Hall Way" [deviceIp="x.x.x.x", userId="", password=""]
 Thing shelly:shelly25-relay:XXXXX4 "Shelly 25 Relay XXXXX4" @ "Dining Room" [deviceIp="x.x.x.x", userId="", password=""]
@@ -1598,7 +1611,6 @@ Thing shelly:shelly25-relay:XXXXX5 "Shelly 25 Relay XXXXX5" @ "Bed Room" [device
 Thing shelly:shellyht:e01691 "ShellyChimenea" @ "lowerground" [ deviceIp="10.0.55.101", userId="", password="", lowBattery=15 , eventsCoIoT=true ]
 Thing shelly:shellyht:e01681 "ShellyDormitorio" @ "upperground" [ deviceIp="10.0.55.102", userId="", password="", lowBattery=15 , eventsCoIoT=true ]
 Thing shelly:shellyflood:XXXXXX "ShellyFlood" @ "cellar" [ deviceIp="10.0.0.103", userId="", password="", lowBattery=15, eventsSwitch=true, eventsButton=true, eventsCoIoT=true ]
-
 ```
 
 ### shelly.items
@@ -1694,7 +1706,7 @@ then
     if (! gBattery.allMembers.filter([state < lowBatteryThreshold]).empty) {
         message = "Battery levels:\n"
 
-        var report = gBattery.allMembers.filter([ state instanceof DecimalType ]).sortBy([ state instanceof DecimalType ]).map[ 
+        var report = gBattery.allMembers.filter([ state instanceof DecimalType ]).sortBy([ state instanceof DecimalType ]).map[
         name + ": " + state.format("%d%%\n") ]
         message = message + report
 
@@ -1759,7 +1771,7 @@ then
 end
 ```
 
-#### Reading colors from Color Picker:
+#### Reading Colors from Color Picker
 
 ```java
 import org.openhab.core.library.types.*
@@ -1789,10 +1801,10 @@ then
         eventSource = triggeredChannel
         eventType = receivedEvent
         ...
-    } 
+    }
 end
 
-rule "Color changed" 
+rule "Color changed"
 when
     Item ShellyColor changed
 then
