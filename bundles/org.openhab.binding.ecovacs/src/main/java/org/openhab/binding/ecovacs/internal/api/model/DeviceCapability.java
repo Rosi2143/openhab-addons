@@ -49,6 +49,8 @@ public enum DeviceCapability {
     UNIT_CARE_LIFESPAN,
     @SerializedName("uses_clean_results_log_api")
     USES_CLEAN_RESULTS_LOG_API,
+    @SerializedName("custom_water_amount")
+    CUSTOM_WATER_AMOUNT,
     // implicit capabilities added in code
     EDGE_CLEANING,
     SPOT_CLEANING,

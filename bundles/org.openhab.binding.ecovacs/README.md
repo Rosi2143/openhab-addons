@@ -62,6 +62,7 @@ In case a particular channel is not supported by a given device (see remarks), i
 | Channel                                 | Type                 | Description                                               | Read Only | Updated By | Remarks  |
 |-----------------------------------------|----------------------|-----------------------------------------------------------|-----------|------------|----------|
 | actions#command                         | String               | Command to execute                                        | No        | Event      | [1]      |
+| status#battery                          | Number               | Current battery level                                     | Yes       | Event      |          |
 | status#state                            | String               | Current operational state                                 | Yes       | Event      | [2]      |
 | status#current-cleaning-mode            | String               | Mode used in current cleaning run                         | Yes       | Event      | [3], [4] |
 | status#current-cleaning-time            | Number:Time          | Time spent in current cleaning run                        | Yes       | Event      | [4]      |
@@ -88,11 +89,12 @@ In case a particular channel is not supported by a given device (see remarks), i
 | settings#true-detect-3d                 | Switch               | Whether True Detect 3D is enabled                         | No        | Polling    | [12]     |
 | settings#voice-volume                   | Dimmer               | The voice volume level in percent                         | No        | Polling    | [13]     |
 | settings#water-amount                   | String               | The amount of water to be used when mopping               | No        | Polling    | [14]     |
+| settings#water-amount-percent           | Dimmer               | The amount of water to be used when mopping (in percent)  | No        | Polling    | [15]     |
 
 Remarks:
 
 - [1] See [section below](#command-channel-actions)
-- [2] Possible states: 'cleaning', 'pause', 'stop', 'drying', 'washing', 'returning' and 'charging' (where 'drying' and 'washing' are only available on newer models with auto empty station)
+- [2] Possible states: 'cleaning', 'pause', 'stop', 'emptying', 'drying', 'washing', 'returning' and 'charging' (where 'emptying', 'drying' and 'washing' are only available on newer models with auto empty station)
 - [3] Possible states: 'auto', 'edge', 'spot', 'spotArea', 'customArea', 'singleRoom' (some of which depend on device capabilities)
 - [4] Current cleaning status is only valid if the device is currently cleaning
 - [5] Only valid for 'spot', 'spotArea' and 'customArea' cleaning modes; value can be used for 'spotArea' and 'customArea' commands (see below)
@@ -104,7 +106,8 @@ Remarks:
 - [11] Only present if device can control power level. Possible values vary by device: 'normal' and 'high' are always supported, 'silent' and 'higher' are supported for some models
 - [12] Only present if device supports True Detect 3D
 - [13] Only present if device has voice reporting
-- [14] Only present if device has a mopping system. Possible values include 'low', 'medium', 'high' and 'veryhigh'
+- [14] Only present if device has a mopping system and is older than the Deebot X8 generation. Possible values include 'low', 'medium', 'high' and 'veryhigh'
+- [15] Only present on Deebot X8 or newer.
 
 ## Command Channel Actions
 

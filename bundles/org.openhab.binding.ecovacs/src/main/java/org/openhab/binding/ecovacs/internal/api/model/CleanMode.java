@@ -39,6 +39,8 @@ public enum CleanMode {
     STOP,
     @SerializedName(value = "going", alternate = { "goCharging" })
     RETURNING,
+    @SerializedName("emptying")
+    EMPTYING,
     @SerializedName("washing")
     WASHING,
     @SerializedName("drying")
@@ -52,6 +54,6 @@ public enum CleanMode {
     }
 
     public boolean isIdle() {
-        return this == IDLE || this == DRYING || this == WASHING;
+        return this == IDLE || this == EMPTYING || this == DRYING || this == WASHING;
     }
 }
