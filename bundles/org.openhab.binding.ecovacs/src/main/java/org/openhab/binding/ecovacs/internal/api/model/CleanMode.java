@@ -41,7 +41,7 @@ public enum CleanMode {
     STOP,
     @SerializedName(value = "going", alternate = { "goCharging" })
     RETURNING,
-    @SerializedName("autoEmpty")
+    @SerializedName(value = "autoEmpty", alternate = { "emptying " })
     EMPTYING,
     @SerializedName("washing")
     WASHING,
