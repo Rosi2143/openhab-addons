@@ -71,72 +71,83 @@ class JsonReportParser implements ReportParser {
             listener.onFirmwareVersionChanged(device, lastFirmwareVersion);
         }
         if (eventName.startsWith("on")) {
-            eventName = eventName.substring(2);
+            eventName = eventName.substring("on".length());
         } else if (eventName.startsWith("report")) {
-            eventName = eventName.substring(6);
+            eventName = eventName.substring("report".length());
         }
-        switch (eventName) {
-            case "battery": {
-                BatteryReport report = payloadAs(response, BatteryReport.class);
-                listener.onBatteryLevelUpdated(device, report.percent);
-                break;
-            }
-            case "chargestate": {
-                ChargeReport report = payloadAs(response, ChargeReport.class);
-                listener.onChargingStateUpdated(device, report.isCharging != 0);
-                break;
-            }
-            case "cleaninfo": {
-                CleanReport report = payloadAs(response, CleanReport.class);
-                CleanMode mode = report.determineCleanMode(gson);
-                if (mode == null) {
-                    throw new DataParsingException("Could not get clean mode from response " + payload);
+        try {
+            switch (eventName) {
+                case "battery": {
+                    BatteryReport report = payloadAs(response, BatteryReport.class);
+                    listener.onBatteryLevelUpdated(device, report.percent);
+                    break;
                 }
-                String area = report.cleanState != null ? report.cleanState.areaDefinition : null;
-                handleCleanModeChange(mode, area);
-                break;
-            }
-            case "cleaninfo_v2": {
-                CleanReportV2 report = payloadAs(response, CleanReportV2.class);
-                CleanMode mode = report.determineCleanMode(gson);
-                if (mode == null) {
-                    throw new DataParsingException("Could not get clean mode from response " + payload);
+                case "chargestate": {
+                    ChargeReport report = payloadAs(response, ChargeReport.class);
+                    listener.onChargingStateUpdated(device, report.isCharging != 0);
+                    break;
                 }
-                String area = report.cleanState != null && report.cleanState.content != null
-                        ? report.cleanState.content.areaDefinition
-                        : null;
-                handleCleanModeChange(mode, area);
-                break;
-            }
-            case "error": {
-                ErrorReport report = payloadAs(response, ErrorReport.class);
-                if (report.errorCodes.isEmpty()) {
-                    listener.onErrorReported(device, 0);
-                } else {
-                    for (Integer code : report.errorCodes) {
-                        listener.onErrorReported(device, code);
+                case "cleaninfo": {
+                    CleanReport report = payloadAs(response, CleanReport.class);
+                    CleanMode mode = report.determineCleanMode(gson);
+                    if (mode == null) {
+                        throw new DataParsingException("Could not get clean mode from response " + payload);
+                    }
+                    String area = report.cleanState != null ? report.cleanState.areaDefinition : null;
+                    handleCleanModeChange(mode, area);
+                    break;
+                }
+                case "cleaninfo_v2": {
+                    CleanReportV2 report = payloadAs(response, CleanReportV2.class);
+                    CleanMode mode = report.determineCleanMode(gson);
+                    if (mode == null) {
+                        throw new DataParsingException("Could not get clean mode from response " + payload);
+                    }
+                    String area = report.cleanState != null && report.cleanState.content != null
+                            ? report.cleanState.content.areaDefinition
+                            : null;
+                    handleCleanModeChange(mode, area);
+                    break;
+                }
+                case "error": {
+                    ErrorReport report = payloadAs(response, ErrorReport.class);
+                    if (report.errorCodes.isEmpty()) {
+                        listener.onErrorReported(device, 0);
+                    } else {
+                        for (Integer code : report.errorCodes) {
+                            listener.onErrorReported(device, code);
+                        }
                     }
                 }
+                case "stats": {
+                    StatsReport report = payloadAs(response, StatsReport.class);
+                    listener.onCleaningStatsUpdated(device, report.area, report.timeInSeconds);
+                    break;
+                }
+                case "waterinfo": {
+                    WaterInfoReport report = payloadAs(response, WaterInfoReport.class);
+                    listener.onWaterSystemPresentUpdated(device, report.waterPlatePresent != 0);
+                    break;
+                }
+                case "workstate": {
+                    WorkStateReport report = payloadAs(response, WorkStateReport.class);
+                    CleanMode mode = report.determineCleanMode(gson);
+                    if (mode == null) {
+                        throw new DataParsingException("Could not get clean mode from response " + payload);
+                    }
+                    handleCleanModeChange(mode, null);
+                    break;
+                }
+                default:
+                    logger.debug("{}: Ignoring unknown event {}", device.getSerialNumber(), eventName);
+                    break;
+                // more possible events (unused for now):
+                // - "evt" -> EventReport
+                // - "lifespan" -> ComponentLifeSpanReport
+                // - "speed" -> SpeedReport
             }
-            case "stats": {
-                StatsReport report = payloadAs(response, StatsReport.class);
-                listener.onCleaningStatsUpdated(device, report.area, report.timeInSeconds);
-                break;
-            }
-            case "waterinfo": {
-                WaterInfoReport report = payloadAs(response, WaterInfoReport.class);
-                listener.onWaterSystemPresentUpdated(device, report.waterPlatePresent != 0);
-                break;
-            }
-            case "workstate": {
-                WorkStateReport report = payloadAs(response, WorkStateReport.class);
-                handleCleanModeChange(report.determineCleanMode(gson), null);
-                break;
-            }
-            // more possible events (unused for now):
-            // - "evt" -> EventReport
-            // - "lifespan" -> ComponentLifeSpanReport
-            // - "speed" -> SpeedReport
+        } catch (JsonSyntaxException e) {
+            throw new DataParsingException("Could not parse JSON payload " + payload, e);
         }
     }
 
