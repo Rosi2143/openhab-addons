@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -194,7 +194,7 @@ public class X3HybridG4Data extends CommonLocalDeviceData {
 
     @Override
     public double getTotalConsumption() {
-        return ((double) ByteUtil.read32BitSigned(getFromRawData(88), getFromRawData(89))) / 10;
+        return ((double) ByteUtil.read32BitSigned(getFromRawData(88), getFromRawData(89))) / 100;
     }
 
     @Override

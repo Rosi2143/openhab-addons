@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -53,6 +53,10 @@ public class OnvifCodec extends ChannelDuplexHandler {
                 switch (response.status().code()) {
                     case 200:
                         break;
+                    case 400:
+                        onvifConnection.processBadRequest(requestType);
+                        ctx.close();
+                        return;
                     case 401:
                         if (!response.headers().isEmpty()) {
                             for (CharSequence name : response.headers().names()) {

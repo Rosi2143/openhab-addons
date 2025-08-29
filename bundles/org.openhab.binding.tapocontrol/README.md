@@ -24,6 +24,8 @@ The following Tapo-Devices are supported. For precise channel-description look a
 | Smart Contact Sensor (RF)          | T110        | Window/Door Smart Contact Sensor             |
 | Smart Temperature Sensor (RF)      | T310        | Temperature and Humidity Sensor              |
 |                                    | T315        | Temperature and Humidity Sensor with Display |
+| Smart Switch (RF)                  | S210        | Wall switch with 1 contact                    |
+| Smart Switch (RF)                  | S220        | Wall switch with 2 contacts                   |
 
 ## Prerequisites
 
@@ -38,15 +40,15 @@ To satisfy this requirement while keeping the device isolated, your router shoul
 
 For Wi-Fi-Devices, discovery is done by connecting to the Tapo-Cloud-Service or use local udp-discovery.
 If enabled, all devices stored in your cloud account will be detected even if they are not in your local network.
-From cloud you can get more informations such as "Device-Alias" as from udp-discovery.
+From cloud you can get more information such as "Device-Alias" as from udp-discovery.
 But you need to know the IP-Adress of your device. This must be set manually in the thing configuration.
 
-UDP-Discovery can find only devices which are online in your local network and get less informations as from cloud.
-But therefore it set's device-ip and protocol automaticly.
+UDP-Discovery can find only devices which are online in your local network and get less information as from the cloud.
+But therefore it set's device-ip and protocol automatically.
 If you have problems with udp-discovery, try to set the advanced setting 'broadcastAddress' to your local subnet ('e.g. 192.168.0.255').
 Default is '255.255.255.255'
 
-You can combine both discovery methods to get any informations from local devices.
+You can combine both discovery methods to get any information from local devices.
 If you enable setting 'onlyLocalOnlineDevices' results will only generated for local online devices but with the combined data of cloud discovery.
 RF-Devices will be discovered by the hub they are connected to.
 You can discover them manually or use ´backgroundDiscovery´
@@ -66,7 +68,7 @@ The thing has the following configuration parameters:
 | password               | Password of your Tapo-Cloud                                                                                                                                |
 | cloudDiscovery         | Use Cloud Discovery-Service to get all in Tapo-App registered devices. Includes DeviceName. IP-Address and Encryption has to set manually                  |
 | udpDiscovery           | Use UDP Discovery-Service to discover online devices in the local network. Includes Encryption and IP-Address. Results will be merged with cloud discovery |
-| onlyLocalOnlineDevices | [advanced] Uses Cloud and UPD-Discovery to get more informations but will only discover online devices via UDP                                             |
+| onlyLocalOnlineDevices | [advanced] Uses Cloud and UPD-Discovery to get more information but will only discover online devices via UDP                                              |
 | broadcastAddress       | [advanced] Set broadcast address to your local subnet  if you have problems with default address                                                           |
 | discoveryInterval      | [advanced] Interval in minutes when a background device scan should be executed. Default is 60                                                             |
 
@@ -96,7 +98,7 @@ All devices support some of the following channels:
 |           | output2          | Switch                 | Power socket 2 on or off            | P300                                                             |
 |           | output3          | Switch                 | Power socket 3 on or off            | P300                                                             |
 |           | brightness       | Dimmer                 | Brightness 0-100%                   | L510, L530, L610, L630, L900, L920                               |
-|           | colorTemperature | Number                 | White-Color-Temp 2500-6500K         | L510, L530, L610, L630, L900, L920                               |
+|           | colorTemperature | Number:Temperature     | Color Temperature in Kelvin         | L530 (2500 K .. 6500 K), L630 (2200 K .. 6500 K)                 |
 |           | color            | Color                  | Color                               | L530, L630, L900, L920                                           |
 | sensor    | isOpen           | Switch                 | Contact (Door/Window) is Open       | T110                                                             |
 |           | currentTemp      | Number:Temperature     | Current Temperature                 | T310, T315                                                       |

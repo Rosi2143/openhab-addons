@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -801,10 +801,10 @@ public class SmartThingsApiService implements SamsungTvService {
                                 logger.trace("{}: SSE Got TV Channel Name: {}", host, tvChannelName);
                                 updateState(CHANNEL_NAME, tvChannelName);
                             }
-                            String Power = d.getSwitch();
-                            if (!Power.isBlank()) {
-                                logger.debug("{}: SSE Got TV Power: {}", host, Power);
-                                if ("on".equals(Power)) {
+                            String power = d.getSwitch();
+                            if (!power.isBlank()) {
+                                logger.debug("{}: SSE Got TV Power: {}", host, power);
+                                if ("on".equals(power)) {
                                     // handler.putOnline(); // ignore on event for now
                                 } else {
                                     // handler.setOffline(); // ignore off event for now

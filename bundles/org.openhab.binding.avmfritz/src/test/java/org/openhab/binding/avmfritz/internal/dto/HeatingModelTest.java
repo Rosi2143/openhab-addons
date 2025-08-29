@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -70,7 +70,15 @@ public class HeatingModelTest {
         heatingModel.setTsoll(BigDecimal.ONE);
         assertEquals(MODE_ON, heatingModel.getRadiatorMode());
 
+        heatingModel.setWindowopenactiv(new BigDecimal(1.0));
+        assertEquals(MODE_WINDOW_OPEN, heatingModel.getRadiatorMode());
+        heatingModel.setWindowopenactiv(new BigDecimal(0.0));
+
         heatingModel.setKomfort(BigDecimal.ONE);
         assertEquals(MODE_COMFORT, heatingModel.getRadiatorMode());
+        heatingModel.setKomfort(null);
+
+        heatingModel.setBoostactive(new BigDecimal(1.0));
+        assertEquals(MODE_BOOST, heatingModel.getRadiatorMode());
     }
 }

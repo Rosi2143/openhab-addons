@@ -1,5 +1,5 @@
-/**
- * Copyright (c) 2010-2024 Contributors to the openHAB project
+/*
+ * Copyright (c) 2010-2025 Contributors to the openHAB project
  *
  * See the NOTICE file(s) distributed with this work for additional
  * information.
@@ -13,7 +13,7 @@
 package org.openhab.binding.shelly.internal.provider;
 
 import static org.openhab.binding.shelly.internal.ShellyBindingConstants.*;
-import static org.openhab.binding.shelly.internal.api1.Shelly1ApiJsonDTO.*;
+import static org.openhab.binding.shelly.internal.api1.Shelly1ApiJsonDTO.SHELLY_API_INVTEMP;
 import static org.openhab.binding.shelly.internal.util.ShellyUtils.*;
 
 import java.util.ArrayList;
@@ -81,6 +81,7 @@ public class ShellyChannelDefinitions {
     public static final String ITEMT_ENERGY = "Number:Energy";
     public static final String ITEMT_VOLT = "Number:ElectricPotential";
     public static final String ITEMT_AMP = "Number:ElectricCurrent";
+    public static final String ITEMT_FREQ = "Number:Frequency";
     public static final String ITEMT_ANGLE = "Number:Angle";
     public static final String ITEMT_DISTANCE = "Number:Length";
     public static final String ITEMT_SPEED = "Number:Speed";
@@ -205,6 +206,7 @@ public class ShellyChannelDefinitions {
                 .add(new ShellyChannel(m, CHGR_METER, CHANNEL_EMETER_VOLTAGE, "meterVoltage", ITEMT_VOLT))
                 .add(new ShellyChannel(m, CHGR_METER, CHANNEL_EMETER_CURRENT, "meterCurrent", ITEMT_AMP))
                 .add(new ShellyChannel(m, CHGR_METER, CHANNEL_EMETER_PFACTOR, "meterPowerFactor", ITEMT_NUMBER))
+                .add(new ShellyChannel(m, CHGR_METER, CHANNEL_EMETER_FREQUENCY, "meterFrequency", ITEMT_FREQ))
                 .add(new ShellyChannel(m, CHGR_METER, CHANNEL_EMETER_RESETTOTAL, "meterResetTotals", ITEMT_SWITCH))
 
                 // 3EM: neutral current (emeter_n)
@@ -431,14 +433,14 @@ public class ShellyChannelDefinitions {
         List<ShellySettingsRgbwLight> lights = profile.settings.lights;
         if (lights != null) {
             ShellySettingsRgbwLight light = lights.get(idx);
-            String whiteGroup = profile.isRGBW2 ? group : CHANNEL_GROUP_WHITE_CONTROL;
+            String whiteGroup = profile.isRGBW2 && !profile.isGen2 ? group : CHANNEL_GROUP_WHITE_CONTROL;
             // Create power channel in color mode and brightness channel in white mode
             addChannel(thing, add, profile.inColor, group, CHANNEL_LIGHT_POWER);
             addChannel(thing, add, light.autoOn != null, group, CHANNEL_TIMER_AUTOON);
             addChannel(thing, add, light.autoOff != null, group, CHANNEL_TIMER_AUTOOFF);
             addChannel(thing, add, status.hasTimer != null, group, CHANNEL_TIMER_ACTIVE);
-            addChannel(thing, add, light.brightness != null, whiteGroup, CHANNEL_BRIGHTNESS);
-            addChannel(thing, add, light.temp != null, whiteGroup, CHANNEL_COLOR_TEMP);
+            addChannel(thing, add, status.brightness != null, whiteGroup, CHANNEL_BRIGHTNESS);
+            addChannel(thing, add, status.temp != null, whiteGroup, CHANNEL_COLOR_TEMP);
         }
 
         return add;
@@ -513,6 +515,7 @@ public class ShellyChannelDefinitions {
         addChannel(thing, newChannels, emeter.reactive != null, group, CHANNEL_EMETER_REACTWATTS);
         addChannel(thing, newChannels, emeter.voltage != null, group, CHANNEL_EMETER_VOLTAGE);
         addChannel(thing, newChannels, emeter.current != null, group, CHANNEL_EMETER_CURRENT);
+        addChannel(thing, newChannels, emeter.frequency != null, group, CHANNEL_EMETER_FREQUENCY);
         addChannel(thing, newChannels, emeter.pf != null, group, CHANNEL_EMETER_PFACTOR); // EM has no PF. but power
         addChannel(thing, newChannels, true, group, CHANNEL_LAST_UPDATE);
         ShellyThingInterface handler = (ShellyThingInterface) thing.getHandler();
@@ -560,9 +563,11 @@ public class ShellyChannelDefinitions {
             addChannel(thing, newChannels, sdata.sensor.vibration != null, CHANNEL_GROUP_SENSOR,
                     CHANNEL_SENSOR_VIBRATION);
         }
+
         // Create tilt for DW/DW2, for BLU DW create channel even tilt is currently not reported
         if (sdata.accel != null || (profile.isBlu && profile.isDW && sdata.lux != null)) {
-            addChannel(thing, newChannels, sdata.accel.tilt != null, CHANNEL_GROUP_SENSOR, CHANNEL_SENSOR_TILT);
+            addChannel(thing, newChannels, sdata.lux != null || sdata.accel.tilt != null, CHANNEL_GROUP_SENSOR,
+                    CHANNEL_SENSOR_TILT);
         }
 
         // Gas
